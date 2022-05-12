@@ -1925,6 +1925,7 @@ static size_t animdata_filter_ds_gpencil(
     tmp_items += animfilter_block_data(ac, &tmp_data, ads, &gpd->id, filter_mode);
 
     /* add Grease Pencil layers */
+    tmp_items += animdata_filter_gpencil_layers_data(&tmp_data, ads, gpd, filter_mode);
 
     /* TODO: do these need a separate expander?
      * XXX:  what order should these go in? */
