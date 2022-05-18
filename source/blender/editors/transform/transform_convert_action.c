@@ -324,7 +324,8 @@ void createTransActionData(bContext *C, TransInfo *t)
     filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT);
   }
   else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/);
+    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT /*|
+              ANIMFILTER_FCURVESONLY*/);  // DEVNOTE: not sure if we need this
   }
   ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
@@ -387,7 +388,9 @@ void createTransActionData(bContext *C, TransInfo *t)
   td = tc->data;
   td2d = tc->data_2d;
 
-  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET)) {
+    // DEVNOTE: too much mem allocation here in the case of ANIMCONT_DOPESHEET, need to account
+    // only for GPlayers and Mask Layers ?
     tc->custom.type.data = tfd = MEM_callocN(sizeof(tGPFtransdata) * count, "tGPFtransdata");
     tc->custom.type.use_free = true;
   }
@@ -776,7 +779,7 @@ void special_aftertrans_update__actedit(bContext *C, TransInfo *t)
   if (ELEM(ac.datatype, ANIMCONT_DOPESHEET, ANIMCONT_SHAPEKEY, ANIMCONT_TIMELINE)) {
     ListBase anim_data = {NULL, NULL};
     bAnimListElem *ale;
-    short filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/);
+    short filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT | ANIMFILTER_FCURVESONLY);
 
     /* get channels to work on */
     ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
@@ -855,6 +858,7 @@ void special_aftertrans_update__actedit(bContext *C, TransInfo *t)
           if (ale->id->tag & LIB_TAG_DOIT) {
             ale->id->tag &= ~LIB_TAG_DOIT;
             posttrans_gpd_clean((bGPdata *)ale->id);
+            // DEVNOTES: should also be called for GPLayer channels in DOPESHEET
           }
         }
       }
