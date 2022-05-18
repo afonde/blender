@@ -393,7 +393,8 @@ void createTransActionData(bContext *C, TransInfo *t)
   td2d = tc->data_2d;
 
   if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET)) {
-    tc->custom.type.data = tfd = MEM_callocN(sizeof(tGPFtransdata) * count, "tGPFtransdata");
+    tc->data_gpf_len = gpf_count;
+    tc->custom.type.data = tfd = MEM_callocN(sizeof(tGPFtransdata) * gpf_count, "tGPFtransdata");
     tc->custom.type.use_free = true;
   }
 
@@ -564,7 +565,7 @@ static void flushTransIntFrameActionData(TransInfo *t)
   tGPFtransdata *tfd = tc->custom.type.data;
 
   /* flush data! */
-  for (int i = 0; i < tc->data_len; i++, tfd++) {
+  for (int i = 0; i < tc->data_gpf_len; i++, tfd++) {
     *(tfd->sdata) = round_fl_to_int(tfd->val);
   }
 }
