@@ -498,7 +498,7 @@ static short copy_action_keys(bAnimContext *ac)
   ANIM_fcurves_copybuf_free();
 
   /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY*/ |
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FCURVESONLY |
             ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
@@ -525,8 +525,8 @@ static short paste_action_keys(bAnimContext *ac,
    * - Second time, we loosen things up if nothing was found the first time, allowing
    *   users to just paste keyframes back into the original curve again T31670.
    */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE |
-            ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/ | ANIMFILTER_NODUPLIS);
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
+            ANIMFILTER_FCURVESONLY | ANIMFILTER_NODUPLIS);
 
   if (ANIM_animdata_filter(ac, &anim_data, filter | ANIMFILTER_SEL, ac->data, ac->datatype) == 0) {
     ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
