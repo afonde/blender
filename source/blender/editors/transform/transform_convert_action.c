@@ -311,6 +311,7 @@ void createTransActionData(bContext *C, TransInfo *t)
   const bool is_prop_edit = (t->flag & T_PROP_EDIT) != 0;
 
   int count = 0;
+  int gpf_count = 0;
   float cfra;
   float ypos = 1.0f / ((ysize / xsize) * (xmask / ymask)) * BLI_rctf_cent_y(&t->region->v2d.cur);
 
@@ -366,13 +367,16 @@ void createTransActionData(bContext *C, TransInfo *t)
     }
 
     if (adt_count > 0) {
+      if (ELEM(ale->type, ANIMTYPE_GPLAYER, ANIMTYPE_MASKLAYER)) {
+        gpf_count += adt_count;
+      }
       count += adt_count;
       ale->tag = true;
     }
   }
 
   /* stop if trying to build list if nothing selected */
-  if (count == 0) {
+  if ((count == 0) && (gpf_count == 0)) {
     /* cleanup temp list */
     ANIM_animdata_freelist(&anim_data);
     return;
@@ -389,9 +393,7 @@ void createTransActionData(bContext *C, TransInfo *t)
   td2d = tc->data_2d;
 
   if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET)) {
-    // DEVNOTE: too much mem allocation here in the case of ANIMCONT_DOPESHEET, need to account
-    // only for GPlayers and Mask Layers ?
-    tc->custom.type.data = tfd = MEM_callocN(sizeof(tGPFtransdata) * count, "tGPFtransdata");
+    tc->custom.type.data = tfd = MEM_callocN(sizeof(tGPFtransdata) * gpf_count, "tGPFtransdata");
     tc->custom.type.use_free = true;
   }
 
