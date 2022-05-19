@@ -565,7 +565,11 @@ static int actkeys_copy_exec(bContext *C, wmOperator *op)
     return OPERATOR_CANCELLED;
   }
   else {
-    if (copy_action_keys(&ac)) {
+    /* Both copy function needs to be evaluated to account for mixed selection */
+    short kf_empty = copy_action_keys(&ac);
+    bool gpf_ok = ED_gpencil_anim_copybuf_copy(&ac);
+
+    if (kf_empty && (!gpf_ok)) {
       BKE_report(op->reports, RPT_ERROR, "No keyframes copied to keyframes copy/paste buffer");
       return OPERATOR_CANCELLED;
     }
@@ -711,8 +715,8 @@ static void insert_action_keys(bAnimContext *ac, short mode)
   eInsertKeyFlags flag;
 
   /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE |
-            ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/ | ANIMFILTER_NODUPLIS);
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
+            ANIMFILTER_FCURVESONLY | ANIMFILTER_NODUPLIS);
   if (mode == 2) {
     filter |= ANIMFILTER_SEL;
   }

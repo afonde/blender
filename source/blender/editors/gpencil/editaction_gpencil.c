@@ -316,8 +316,12 @@ bool ED_gpencil_anim_copybuf_copy(bAnimContext *ac)
   filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
-  /* assume that each of these is a GP layer */
   for (ale = anim_data.first; ale; ale = ale->next) {
+    /* only deal with GPlayers (case of calls from general dopesheet) */
+    if (ale->type != ANIMTYPE_GPLAYER) {
+      continue;
+    }
+
     ListBase copied_frames = {NULL, NULL};
     bGPDlayer *gpl = (bGPDlayer *)ale->data;
 
