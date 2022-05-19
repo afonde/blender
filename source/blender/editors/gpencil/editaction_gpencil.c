@@ -363,14 +363,8 @@ bool ED_gpencil_anim_copybuf_copy(bAnimContext *ac)
   /* clean up */
   ANIM_animdata_freelist(&anim_data);
 
-  /* check if anything ended up in the buffer */
-  if (ELEM(NULL, gpencil_anim_copybuf.first, gpencil_anim_copybuf.last)) {
-    BKE_report(ac->reports, RPT_ERROR, "No keyframes copied to keyframes copy/paste buffer");
-    return false;
-  }
-
   /* report success */
-  return true;
+  return !ELEM(NULL, gpencil_anim_copybuf.first, gpencil_anim_copybuf.last);
 }
 
 bool ED_gpencil_anim_copybuf_paste(bAnimContext *ac, const short offset_mode)

@@ -612,7 +612,8 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   /* paste keyframes */
   if (ac.datatype == ANIMCONT_GPENCIL) {
     if (ED_gpencil_anim_copybuf_paste(&ac, offset_mode) == false) {
-      /* An error occurred - Reports should have been fired already */
+      /* check if anything ended up in the buffer */
+      BKE_report(op->reports, RPT_ERROR, "No keyframes copied to keyframes copy/paste buffer");
       return OPERATOR_CANCELLED;
     }
   }
