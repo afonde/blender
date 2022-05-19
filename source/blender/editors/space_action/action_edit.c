@@ -555,7 +555,8 @@ static int actkeys_copy_exec(bContext *C, wmOperator *op)
   /* copy keyframes */
   if (ac.datatype == ANIMCONT_GPENCIL) {
     if (ED_gpencil_anim_copybuf_copy(&ac) == false) {
-      /* Nothing got copied - An error about this should be been logged already */
+      /* check if anything ended up in the buffer */
+      BKE_report(op->reports, RPT_ERROR, "No keyframes copied to keyframes copy/paste buffer");
       return OPERATOR_CANCELLED;
     }
   }
@@ -612,8 +613,7 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   /* paste keyframes */
   if (ac.datatype == ANIMCONT_GPENCIL) {
     if (ED_gpencil_anim_copybuf_paste(&ac, offset_mode) == false) {
-      /* check if anything ended up in the buffer */
-      BKE_report(op->reports, RPT_ERROR, "No keyframes copied to keyframes copy/paste buffer");
+      /* An error occurred - Reports should have been fired already */
       return OPERATOR_CANCELLED;
     }
   }
