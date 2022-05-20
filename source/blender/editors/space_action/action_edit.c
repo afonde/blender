@@ -727,9 +727,12 @@ static void insert_action_keys(bAnimContext *ac, short mode)
   ToolSettings *ts = scene->toolsettings;
   eInsertKeyFlags flag;
 
+  eGP_GetFrame_Mode add_frame_mode;
+  bGPdata *gpd_old = NULL;
+
   /* filter data */
   filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
-            ANIMFILTER_FCURVESONLY | ANIMFILTER_NODUPLIS);
+            ANIMFILTER_NODUPLIS);
   if (mode == 2) {
     filter |= ANIMFILTER_SEL;
   }
@@ -742,77 +745,7 @@ static void insert_action_keys(bAnimContext *ac, short mode)
   /* Init keyframing flag. */
   flag = ANIM_get_keyframing_flags(scene, true);
 
-  /* insert keyframes */
-  const AnimationEvalContext anim_eval_context = BKE_animsys_eval_context_construct(ac->depsgraph,
-                                                                                    (float)CFRA);
-  for (ale = anim_data.first; ale; ale = ale->next) {
-    FCurve *fcu = (FCurve *)ale->key_data;
-
-    /* Read value from property the F-Curve represents, or from the curve only?
-     * - ale->id != NULL:
-     *   Typically, this means that we have enough info to try resolving the path.
-     *
-     * - ale->owner != NULL:
-     *   If this is set, then the path may not be resolvable from the ID alone,
-     *   so it's easier for now to just read the F-Curve directly.
-     *   (TODO: add the full-blown PointerRNA relative parsing case here...)
-     */
-    if (ale->id && !ale->owner) {
-      insert_keyframe(ac->bmain,
-                      reports,
-                      ale->id,
-                      NULL,
-                      ((fcu->grp) ? (fcu->grp->name) : (NULL)),
-                      fcu->rna_path,
-                      fcu->array_index,
-                      &anim_eval_context,
-                      ts->keyframe_type,
-                      &nla_cache,
-                      flag);
-    }
-    else {
-      AnimData *adt = ANIM_nla_mapping_get(ac, ale);
-
-      /* adjust current frame for NLA-scaling */
-      float cfra = anim_eval_context.eval_time;
-      if (adt) {
-        cfra = BKE_nla_tweakedit_remap(adt, cfra, NLATIME_CONVERT_UNMAP);
-      }
-
-      const float curval = evaluate_fcurve(fcu, cfra);
-      insert_vert_fcurve(fcu, cfra, curval, ts->keyframe_type, 0);
-    }
-
-    ale->update |= ANIM_UPDATE_DEFAULT;
-  }
-
-  BKE_animsys_free_nla_keyframing_context_cache(&nla_cache);
-
-  ANIM_animdata_update(ac, &anim_data);
-  ANIM_animdata_freelist(&anim_data);
-}
-
-/* this function is for inserting new grease pencil frames */
-static void insert_gpencil_keys(bAnimContext *ac, short mode)
-{
-  ListBase anim_data = {NULL, NULL};
-  bAnimListElem *ale;
-  int filter;
-
-  Scene *scene = ac->scene;
-  ToolSettings *ts = scene->toolsettings;
-  eGP_GetFrame_Mode add_frame_mode;
-
-  /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
-            ANIMFILTER_NODUPLIS);
-  if (mode == 2) {
-    filter |= ANIMFILTER_SEL;
-  }
-
-  ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
-
-  /* add a copy or a blank frame? */
+  /* GPLayers specific flags */
   if (ts->gpencil_flags & GP_TOOL_FLAG_RETAIN_LAST) {
     add_frame_mode = GP_GETFRAME_ADD_COPY; /* XXX: actframe may not be what we want? */
   }
@@ -820,18 +753,63 @@ static void insert_gpencil_keys(bAnimContext *ac, short mode)
     add_frame_mode = GP_GETFRAME_ADD_NEW;
   }
 
-  /* Insert gp frames. */
-  bGPdata *gpd_old = NULL;
+  /* insert keyframes */
+  const AnimationEvalContext anim_eval_context = BKE_animsys_eval_context_construct(ac->depsgraph,
+                                                                                    (float)CFRA);
   for (ale = anim_data.first; ale; ale = ale->next) {
-    bGPdata *gpd = (bGPdata *)ale->id;
-    bGPDlayer *gpl = (bGPDlayer *)ale->data;
-    BKE_gpencil_layer_frame_get(gpl, CFRA, add_frame_mode);
-    /* Check if the gpd changes to tag only once. */
-    if (gpd != gpd_old) {
-      BKE_gpencil_tag(gpd);
-      gpd_old = gpd;
+    if (ale->type == ANIMTYPE_GPLAYER) {
+      bGPdata *gpd = (bGPdata *)ale->id;
+      bGPDlayer *gpl = (bGPDlayer *)ale->data;
+      BKE_gpencil_layer_frame_get(gpl, CFRA, add_frame_mode);
+      /* Check if the gpd changes to tag only once. */
+      if (gpd != gpd_old) {
+        BKE_gpencil_tag(gpd);
+        gpd_old = gpd;
+      }
+    }
+    else {
+      FCurve *fcu = (FCurve *)ale->key_data;
+
+      /* Read value from property the F-Curve represents, or from the curve only?
+       * - ale->id != NULL:
+       *   Typically, this means that we have enough info to try resolving the path.
+       *
+       * - ale->owner != NULL:
+       *   If this is set, then the path may not be resolvable from the ID alone,
+       *   so it's easier for now to just read the F-Curve directly.
+       *   (TODO: add the full-blown PointerRNA relative parsing case here...)
+       */
+      if (ale->id && !ale->owner) {
+        insert_keyframe(ac->bmain,
+                        reports,
+                        ale->id,
+                        NULL,
+                        ((fcu->grp) ? (fcu->grp->name) : (NULL)),
+                        fcu->rna_path,
+                        fcu->array_index,
+                        &anim_eval_context,
+                        ts->keyframe_type,
+                        &nla_cache,
+                        flag);
+      }
+      else {
+        AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+
+        /* adjust current frame for NLA-scaling */
+        float cfra = anim_eval_context.eval_time;
+        if (adt) {
+          cfra = BKE_nla_tweakedit_remap(adt, cfra, NLATIME_CONVERT_UNMAP);
+        }
+
+        const float curval = evaluate_fcurve(fcu, cfra);
+        insert_vert_fcurve(fcu, cfra, curval, ts->keyframe_type, 0);
+      }
+
+      ale->update |= ANIM_UPDATE_DEFAULT;
     }
   }
+
+  BKE_animsys_free_nla_keyframing_context_cache(&nla_cache);
 
   ANIM_animdata_update(ac, &anim_data);
   ANIM_animdata_freelist(&anim_data);
@@ -858,12 +836,7 @@ static int actkeys_insertkey_exec(bContext *C, wmOperator *op)
   mode = RNA_enum_get(op->ptr, "type");
 
   /* insert keyframes */
-  if (ac.datatype == ANIMCONT_GPENCIL) {
-    insert_gpencil_keys(&ac, mode);
-  }
-  else {
-    insert_action_keys(&ac, mode);
-  }
+  insert_action_keys(&ac, mode);
 
   /* set notifier that keyframes have changed */
   if (ac.datatype == ANIMCONT_GPENCIL) {
