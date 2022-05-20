@@ -633,7 +633,6 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
     gpframes_inbuf = ED_gpencil_anim_copybuf_paste(&ac, offset_mode);
 
     if (kf_empty && !gpframes_inbuf) {
-      // DEVNOTES : reports were in each function, I've put all of them in here
       if (kf_empty == -2) {
         BKE_report(op->reports, RPT_ERROR, "No selected F-Curves to paste into");
       }
