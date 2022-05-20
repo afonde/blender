@@ -1256,7 +1256,7 @@ static void setexpo_action_keys(bAnimContext *ac, short mode)
 
   /* filter data */
   filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
-            ANIMFILTER_SEL /*| ANIMFILTER_CURVESONLY*/ | ANIMFILTER_NODUPLIS);
+            ANIMFILTER_SEL | ANIMFILTER_FCURVESONLY | ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   /* loop through setting mode per F-Curve */
