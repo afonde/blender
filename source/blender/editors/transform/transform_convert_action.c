@@ -321,13 +321,7 @@ void createTransActionData(bContext *C, TransInfo *t)
   }
 
   /* filter data */
-  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT);
-  }
-  else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT /*|
-              ANIMFILTER_FCURVESONLY*/);  // DEVNOTE: not sure if we need this
-  }
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT);
   ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
   /* which side of the current frame should be allowed */

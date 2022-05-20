@@ -324,7 +324,7 @@ typedef enum eAnimFilter_Flags {
   /** duplicate entries for animation data attached to multi-user blocks must not occur */
   ANIMFILTER_NODUPLIS = (1 << 11),
 
-  // DEVNOTE : not sure what value to put, or whether it is important or not
+  /** avoid channel that does not have any F-curve data */
   ANIMFILTER_FCURVESONLY = (1 << 12),
 
   /** for checking if we should keep some collapsed channel around (internal use only!) */
