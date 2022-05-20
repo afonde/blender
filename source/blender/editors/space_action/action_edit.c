@@ -1738,8 +1738,8 @@ static void snap_action_keys(bAnimContext *ac, short mode)
     filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT);
   }
   else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE |
-              ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/ | ANIMFILTER_NODUPLIS);
+    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
+              ANIMFILTER_NODUPLIS);
   }
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
