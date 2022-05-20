@@ -1649,7 +1649,7 @@ static int actkeys_framejump_exec(bContext *C, wmOperator *UNUSED(op))
 
   /* init edit data */
   /* loop over action data, averaging values */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY */ |
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FCURVESONLY |
             ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
