@@ -1547,8 +1547,8 @@ static void setkeytype_action_keys(bAnimContext *ac, short mode)
   KeyframeEditFunc set_cb = ANIM_editkeyframes_keytype(mode);
 
   /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE |
-            ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/ | ANIMFILTER_NODUPLIS);
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
+            ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   /* Loop through setting BezTriple interpolation
@@ -1556,32 +1556,13 @@ static void setkeytype_action_keys(bAnimContext *ac, short mode)
    * Currently that's not necessary here.
    */
   for (ale = anim_data.first; ale; ale = ale->next) {
-    ANIM_fcurve_keyframes_loop(NULL, ale->key_data, NULL, set_cb, NULL);
-
-    ale->update |= ANIM_UPDATE_DEPS | ANIM_UPDATE_HANDLES;
-  }
-
-  ANIM_animdata_update(ac, &anim_data);
-  ANIM_animdata_freelist(&anim_data);
-}
-
-/* this function is responsible for setting the keyframe type for Grease Pencil frames */
-static void setkeytype_gpencil_keys(bAnimContext *ac, short mode)
-{
-  ListBase anim_data = {NULL, NULL};
-  bAnimListElem *ale;
-  int filter;
-
-  /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
-            ANIMFILTER_NODUPLIS);
-  ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
-
-  /* loop through each layer */
-  for (ale = anim_data.first; ale; ale = ale->next) {
     if (ale->type == ANIMTYPE_GPLAYER) {
       ED_gpencil_layer_frames_keytype_set(ale->data, mode);
       ale->update |= ANIM_UPDATE_DEPS;
+    }
+    else {
+      ANIM_fcurve_keyframes_loop(NULL, ale->key_data, NULL, set_cb, NULL);
+      ale->update |= ANIM_UPDATE_DEPS | ANIM_UPDATE_HANDLES;
     }
   }
 
@@ -1610,12 +1591,7 @@ static int actkeys_keytype_exec(bContext *C, wmOperator *op)
   mode = RNA_enum_get(op->ptr, "type");
 
   /* set handle type */
-  if (ac.datatype == ANIMCONT_GPENCIL) {
-    setkeytype_gpencil_keys(&ac, mode);
-  }
-  else {
-    setkeytype_action_keys(&ac, mode);
-  }
+  setkeytype_action_keys(&ac, mode);
 
   /* set notifier that keyframe properties have changed */
   WM_event_add_notifier(C, NC_ANIMATION | ND_KEYFRAME_PROP, NULL);
