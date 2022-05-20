@@ -1235,13 +1235,11 @@ short paste_animedit_keys(bAnimContext *ac,
 
   /* check if buffer is empty */
   if (BLI_listbase_is_empty(&animcopybuf)) {
-    BKE_report(ac->reports, RPT_ERROR, "No animation data in buffer to paste");
     return -1;
   }
 
   if (BLI_listbase_is_empty(anim_data)) {
-    BKE_report(ac->reports, RPT_ERROR, "No selected F-Curves to paste into");
-    return -1;
+    return -2;
   }
 
   /* methods of offset */

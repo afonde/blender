@@ -602,6 +602,8 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   const eKeyMergeMode merge_mode = RNA_enum_get(op->ptr, "merge");
   const bool flipped = RNA_boolean_get(op->ptr, "flipped");
 
+  bool gpframes_inbuf = false;
+
   /* get editor data */
   if (ANIM_animdata_get_context(C, &ac) == 0) {
     return OPERATOR_CANCELLED;
@@ -613,7 +615,7 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   /* paste keyframes */
   if (ac.datatype == ANIMCONT_GPENCIL) {
     if (ED_gpencil_anim_copybuf_paste(&ac, offset_mode) == false) {
-      /* An error occurred - Reports should have been fired already */
+      BKE_report(op->reports, RPT_ERROR, "No data in buffer to paste");
       return OPERATOR_CANCELLED;
     }
   }
@@ -625,14 +627,25 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
     return OPERATOR_CANCELLED;
   }
   else {
+    /* Both paste function needs to be evaluated to account for mixed selection */
+    short kf_empty = paste_action_keys(&ac, offset_mode, merge_mode, flipped);
     /* non-zero return means an error occurred while trying to paste */
-    if (paste_action_keys(&ac, offset_mode, merge_mode, flipped)) {
+    gpframes_inbuf = ED_gpencil_anim_copybuf_paste(&ac, offset_mode);
+
+    if (kf_empty && !gpframes_inbuf) {
+      // DEVNOTES : reports were in each function, I've put all of them in here
+      if (kf_empty == -2) {
+        BKE_report(op->reports, RPT_ERROR, "No selected F-Curves to paste into");
+      }
+      else {
+        BKE_report(op->reports, RPT_ERROR, "No data in buffer to paste");
+      }
       return OPERATOR_CANCELLED;
     }
   }
 
   /* Grease Pencil needs extra update to refresh the added keyframes. */
-  if (ac.datatype == ANIMCONT_GPENCIL) {
+  if ((ac.datatype == ANIMCONT_GPENCIL) || (gpframes_inbuf)) {
     WM_event_add_notifier(C, NC_GPENCIL | ND_DATA, NULL);
   }
   /* set notifier that keyframes have changed */

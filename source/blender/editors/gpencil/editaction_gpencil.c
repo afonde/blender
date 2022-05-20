@@ -379,7 +379,6 @@ bool ED_gpencil_anim_copybuf_paste(bAnimContext *ac, const short offset_mode)
 
   /* check if buffer is empty */
   if (BLI_listbase_is_empty(&gpencil_anim_copybuf)) {
-    BKE_report(ac->reports, RPT_ERROR, "No data in buffer to paste");
     return false;
   }
 
@@ -412,6 +411,11 @@ bool ED_gpencil_anim_copybuf_paste(bAnimContext *ac, const short offset_mode)
 
   /* from selected channels */
   for (ale = anim_data.first; ale; ale = ale->next) {
+    /* only deal with GPlayers (case of calls from general dopesheet) */
+    if (ale->type != ANIMTYPE_GPLAYER) {
+      continue;
+    }
+
     bGPDlayer *gpld = (bGPDlayer *)ale->data;
     bGPDlayer *gpls = NULL;
     bGPDframe *gpfs, *gpf;
