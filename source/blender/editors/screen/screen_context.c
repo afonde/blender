@@ -995,7 +995,7 @@ static eContextResult screen_ctx_sel_actions_impl(const bContext *C,
 
     switch (ac.spacetype) {
       case SPACE_GRAPH:
-        filter |= ANIMFILTER_CURVE_VISIBLE | ANIMFILTER_SEL;
+        filter |= ANIMFILTER_FCURVESONLY | ANIMFILTER_CURVE_VISIBLE | ANIMFILTER_SEL;
         break;
 
       case SPACE_ACTION:
@@ -1060,8 +1060,9 @@ static eContextResult screen_ctx_sel_edit_fcurves_(const bContext *C,
     ListBase anim_data = {NULL, NULL};
 
     int filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_NODUPLIS) |
-                 (ac.spacetype == SPACE_GRAPH ? ANIMFILTER_CURVE_VISIBLE :
-                                                ANIMFILTER_LIST_VISIBLE) |
+                 (ac.spacetype == SPACE_GRAPH ?
+                      (ANIMFILTER_CURVE_VISIBLE | ANIMFILTER_FCURVESONLY) :
+                      ANIMFILTER_LIST_VISIBLE) |
                  extra_filter;
 
     ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
@@ -1105,7 +1106,7 @@ static eContextResult screen_ctx_active_editable_fcurve(const bContext *C,
     ListBase anim_data = {NULL, NULL};
 
     int filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_ACTIVE | ANIMFILTER_FOREDIT |
-                  ANIMFILTER_CURVE_VISIBLE);
+                  ANIMFILTER_FCURVESONLY | ANIMFILTER_CURVE_VISIBLE);
 
     ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
@@ -1131,8 +1132,9 @@ static eContextResult screen_ctx_selected_editable_keyframes(const bContext *C,
     /* Use keyframes from editable selected FCurves. */
     int filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_NODUPLIS | ANIMFILTER_FOREDIT |
                   ANIMFILTER_SEL) |
-                 (ac.spacetype == SPACE_GRAPH ? ANIMFILTER_CURVE_VISIBLE :
-                                                ANIMFILTER_LIST_VISIBLE);
+                 (ac.spacetype == SPACE_GRAPH ?
+                      (ANIMFILTER_CURVE_VISIBLE | ANIMFILTER_FCURVESONLY) :
+                      ANIMFILTER_LIST_VISIBLE);
 
     ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
