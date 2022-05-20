@@ -392,7 +392,7 @@ void createTransActionData(bContext *C, TransInfo *t)
   td = tc->data;
   td2d = tc->data_2d;
 
-  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET)) {
+  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET, ANIMCONT_TIMELINE)) {
     tc->data_gpf_len = gpf_count;
     tc->custom.type.data = tfd = MEM_callocN(sizeof(tGPFtransdata) * gpf_count, "tGPFtransdata");
     tc->custom.type.use_free = true;
@@ -595,7 +595,7 @@ void recalcData_actedit(TransInfo *t)
   ANIM_animdata_context_getdata(&ac);
 
   /* perform flush */
-  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET)) {
+  if (ELEM(ac.datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK, ANIMCONT_DOPESHEET, ANIMCONT_TIMELINE)) {
     /* flush transform values back to actual coordinates */
     flushTransIntFrameActionData(t);
   }
