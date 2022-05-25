@@ -416,11 +416,7 @@ static void box_select_elem(
         break;
       }
 
-      if (ale->type == ANIMTYPE_SUMMARY && ELEM(ac->datatype,
-                                                ANIMCONT_GPENCIL,
-                                                ANIMCONT_MASK,
-                                                ANIMCONT_DOPESHEET,
-                                                ANIMCONT_TIMELINE)) {
+      if (ale->type == ANIMTYPE_SUMMARY) {
         ListBase anim_data = {NULL, NULL};
         ANIM_animdata_filter(ac, &anim_data, ANIMFILTER_DATA_VISIBLE, ac->data, ac->datatype);
 
@@ -432,8 +428,10 @@ static void box_select_elem(
         ANIM_animdata_freelist(&anim_data);
       }
 
-      ANIM_animchannel_keyframes_loop(
-          &sel_data->ked, ac->ads, ale, sel_data->ok_cb, sel_data->select_cb, NULL);
+      if (!ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+        ANIM_animchannel_keyframes_loop(
+            &sel_data->ked, ac->ads, ale, sel_data->ok_cb, sel_data->select_cb, NULL);
+      }
     }
   }
 }
@@ -662,11 +660,7 @@ static void region_select_elem(RegionSelectData *sel_data, bAnimListElem *ale, b
         break;
       }
 
-      if (ale->type == ANIMTYPE_SUMMARY && ELEM(ac->datatype,
-                                                ANIMCONT_GPENCIL,
-                                                ANIMCONT_MASK,
-                                                ANIMCONT_DOPESHEET,
-                                                ANIMCONT_TIMELINE)) {
+      if (ale->type == ANIMTYPE_SUMMARY) {
         ListBase anim_data = {NULL, NULL};
         ANIM_animdata_filter(ac, &anim_data, ANIMFILTER_DATA_VISIBLE, ac->data, ac->datatype);
 
@@ -678,8 +672,10 @@ static void region_select_elem(RegionSelectData *sel_data, bAnimListElem *ale, b
         ANIM_animdata_freelist(&anim_data);
       }
 
-      ANIM_animchannel_keyframes_loop(
-          &sel_data->ked, ac->ads, ale, sel_data->ok_cb, sel_data->select_cb, NULL);
+      if (!ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+        ANIM_animchannel_keyframes_loop(
+            &sel_data->ked, ac->ads, ale, sel_data->ok_cb, sel_data->select_cb, NULL);
+      }
     }
   }
 }
@@ -1547,17 +1543,11 @@ static void actkeys_mselect_single(bAnimContext *ac,
     ED_mask_select_frame(ale->data, selx, select_mode);
   }
   else {
-    if (ELEM(ac->datatype,
-             ANIMCONT_GPENCIL,
-             ANIMCONT_MASK,
-             ANIMCONT_DOPESHEET,
-             ANIMCONT_TIMELINE) &&
-        (ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
+    if ((ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
       ListBase anim_data = {NULL, NULL};
       int filter;
 
-      filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY */ |
-                ANIMFILTER_NODUPLIS);
+      filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
       ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
       LISTBASE_FOREACH (bAnimListElem *, ale2, &anim_data) {
@@ -1574,7 +1564,9 @@ static void actkeys_mselect_single(bAnimContext *ac,
       ANIM_animdata_freelist(&anim_data);
     }
 
-    ANIM_animchannel_keyframes_loop(&ked, ac->ads, ale, ok_cb, select_cb, NULL);
+    if (!ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+      ANIM_animchannel_keyframes_loop(&ked, ac->ads, ale, ok_cb, select_cb, NULL);
+    }
   }
 }
 
@@ -1656,17 +1648,11 @@ static void actkeys_mselect_channel_only(bAnimContext *ac, bAnimListElem *ale, s
     ED_mask_select_frames(ale->data, select_mode);
   }
   else {
-    if (ELEM(ac->datatype,
-             ANIMCONT_GPENCIL,
-             ANIMCONT_MASK,
-             ANIMCONT_DOPESHEET,
-             ANIMCONT_TIMELINE) &&
-        (ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
+    if ((ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
       ListBase anim_data = {NULL, NULL};
       int filter;
 
-      filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY */ |
-                ANIMFILTER_NODUPLIS);
+      filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
       ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
       LISTBASE_FOREACH (bAnimListElem *, ale2, &anim_data) {
@@ -1682,7 +1668,10 @@ static void actkeys_mselect_channel_only(bAnimContext *ac, bAnimListElem *ale, s
       ANIM_animdata_update(ac, &anim_data);
       ANIM_animdata_freelist(&anim_data);
     }
-    ANIM_animchannel_keyframes_loop(NULL, ac->ads, ale, NULL, select_cb, NULL);
+
+    if (!ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+      ANIM_animchannel_keyframes_loop(NULL, ac->ads, ale, NULL, select_cb, NULL);
+    }
   }
 }
 
