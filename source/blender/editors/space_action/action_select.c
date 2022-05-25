@@ -416,7 +416,11 @@ static void box_select_elem(
         break;
       }
 
-      if (ale->type == ANIMTYPE_SUMMARY && ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+      if (ale->type == ANIMTYPE_SUMMARY && ELEM(ac->datatype,
+                                                ANIMCONT_GPENCIL,
+                                                ANIMCONT_MASK,
+                                                ANIMCONT_DOPESHEET,
+                                                ANIMCONT_TIMELINE)) {
         ListBase anim_data = {NULL, NULL};
         ANIM_animdata_filter(ac, &anim_data, ANIMFILTER_DATA_VISIBLE, ac->data, ac->datatype);
 
@@ -658,7 +662,11 @@ static void region_select_elem(RegionSelectData *sel_data, bAnimListElem *ale, b
         break;
       }
 
-      if (ale->type == ANIMTYPE_SUMMARY && ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
+      if (ale->type == ANIMTYPE_SUMMARY && ELEM(ac->datatype,
+                                                ANIMCONT_GPENCIL,
+                                                ANIMCONT_MASK,
+                                                ANIMCONT_DOPESHEET,
+                                                ANIMCONT_TIMELINE)) {
         ListBase anim_data = {NULL, NULL};
         ANIM_animdata_filter(ac, &anim_data, ANIMFILTER_DATA_VISIBLE, ac->data, ac->datatype);
 
@@ -1539,8 +1547,12 @@ static void actkeys_mselect_single(bAnimContext *ac,
     ED_mask_select_frame(ale->data, selx, select_mode);
   }
   else {
-    if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK) && (ale->type == ANIMTYPE_SUMMARY) &&
-        (ale->datatype == ALE_ALL)) {
+    if (ELEM(ac->datatype,
+             ANIMCONT_GPENCIL,
+             ANIMCONT_MASK,
+             ANIMCONT_DOPESHEET,
+             ANIMCONT_TIMELINE) &&
+        (ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
       ListBase anim_data = {NULL, NULL};
       int filter;
 
@@ -1548,22 +1560,21 @@ static void actkeys_mselect_single(bAnimContext *ac,
                 ANIMFILTER_NODUPLIS);
       ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
-      for (ale = anim_data.first; ale; ale = ale->next) {
-        if (ale->type == ANIMTYPE_GPLAYER) {
-          ED_gpencil_select_frame(ale->data, selx, select_mode);
-          ale->update |= ANIM_UPDATE_DEPS;
+      LISTBASE_FOREACH (bAnimListElem *, ale2, &anim_data) {
+        if (ale2->type == ANIMTYPE_GPLAYER) {
+          ED_gpencil_select_frame(ale2->data, selx, select_mode);
+          ale2->update |= ANIM_UPDATE_DEPS;
         }
-        else if (ale->type == ANIMTYPE_MASKLAYER) {
-          ED_mask_select_frame(ale->data, selx, select_mode);
+        else if (ale2->type == ANIMTYPE_MASKLAYER) {
+          ED_mask_select_frame(ale2->data, selx, select_mode);
         }
       }
 
       ANIM_animdata_update(ac, &anim_data);
       ANIM_animdata_freelist(&anim_data);
     }
-    else {
-      ANIM_animchannel_keyframes_loop(&ked, ac->ads, ale, ok_cb, select_cb, NULL);
-    }
+
+    ANIM_animchannel_keyframes_loop(&ked, ac->ads, ale, ok_cb, select_cb, NULL);
   }
 }
 
@@ -1645,8 +1656,12 @@ static void actkeys_mselect_channel_only(bAnimContext *ac, bAnimListElem *ale, s
     ED_mask_select_frames(ale->data, select_mode);
   }
   else {
-    if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK) && (ale->type == ANIMTYPE_SUMMARY) &&
-        (ale->datatype == ALE_ALL)) {
+    if (ELEM(ac->datatype,
+             ANIMCONT_GPENCIL,
+             ANIMCONT_MASK,
+             ANIMCONT_DOPESHEET,
+             ANIMCONT_TIMELINE) &&
+        (ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
       ListBase anim_data = {NULL, NULL};
       int filter;
 
@@ -1654,22 +1669,20 @@ static void actkeys_mselect_channel_only(bAnimContext *ac, bAnimListElem *ale, s
                 ANIMFILTER_NODUPLIS);
       ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
-      for (ale = anim_data.first; ale; ale = ale->next) {
-        if (ale->type == ANIMTYPE_GPLAYER) {
-          ED_gpencil_select_frames(ale->data, select_mode);
-          ale->update |= ANIM_UPDATE_DEPS;
+      LISTBASE_FOREACH (bAnimListElem *, ale2, &anim_data) {
+        if (ale2->type == ANIMTYPE_GPLAYER) {
+          ED_gpencil_select_frames(ale2->data, select_mode);
+          ale2->update |= ANIM_UPDATE_DEPS;
         }
-        else if (ale->type == ANIMTYPE_MASKLAYER) {
-          ED_mask_select_frames(ale->data, select_mode);
+        else if (ale2->type == ANIMTYPE_MASKLAYER) {
+          ED_mask_select_frames(ale2->data, select_mode);
         }
       }
 
       ANIM_animdata_update(ac, &anim_data);
       ANIM_animdata_freelist(&anim_data);
     }
-    else {
-      ANIM_animchannel_keyframes_loop(NULL, ac->ads, ale, NULL, select_cb, NULL);
-    }
+    ANIM_animchannel_keyframes_loop(NULL, ac->ads, ale, NULL, select_cb, NULL);
   }
 }
 
