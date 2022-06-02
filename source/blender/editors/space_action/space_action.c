@@ -506,7 +506,7 @@ static void action_listener(const wmSpaceTypeListenerParams *params)
   /* context changes */
   switch (wmn->category) {
     case NC_GPENCIL:
-      /* only handle these events in containers where GPencil frames are displayed */
+      /* only handle these events for containers in which GPencil frames are displayed */
       if (ELEM(saction->mode, SACTCONT_GPENCIL, SACTCONT_DOPESHEET, SACTCONT_TIMELINE)) {
         if (wmn->action == NA_EDITED) {
           ED_area_tag_redraw(area);
