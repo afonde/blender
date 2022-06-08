@@ -997,11 +997,16 @@ static void columnselect_action_keys(bAnimContext *ac, short mode)
         }
       }
       else {
-        filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY*/);
+        filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE);
         ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
         for (ale = anim_data.first; ale; ale = ale->next) {
-          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_to_cfraelem, NULL);
+          if (ale->datatype == ALE_GPFRAME) {
+            ED_gpencil_layer_make_cfra_list(ale->data, &ked.list, 1);
+          }
+          else {
+            ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_to_cfraelem, NULL);
+          }
         }
       }
       ANIM_animdata_freelist(&anim_data);
@@ -1030,12 +1035,7 @@ static void columnselect_action_keys(bAnimContext *ac, short mode)
   /* loop through all of the keys and select additional keyframes
    * based on the keys found to be selected above
    */
-  if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE);
-  }
-  else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY*/);
-  }
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   for (ale = anim_data.first; ale; ale = ale->next) {
