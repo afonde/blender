@@ -158,8 +158,7 @@ static bool get_keyframe_extents(bAnimContext *ac, float *min, float *max, const
   /* get data to filter, from Action or Dopesheet */
   /* XXX: what is sel doing here?!
    *      Commented it, was breaking things (eg. the "auto preview range" tool). */
-  filter = (ANIMFILTER_DATA_VISIBLE |
-            ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_SEL */ /*| ANIMFILTER_CURVESONLY*/ |
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_SEL */ |
             ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
@@ -878,14 +877,8 @@ static bool duplicate_action_keys(bAnimContext *ac)
   bool changed = false;
 
   /* filter data */
-  if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
-              ANIMFILTER_NODUPLIS);
-  }
-  else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE |
-              ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/ | ANIMFILTER_NODUPLIS);
-  }
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FOREDIT |
+            ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   /* loop through filtered data and delete selected keys */

@@ -235,13 +235,7 @@ static void deselect_action_keys(bAnimContext *ac, short test, short sel)
   KeyframeEditFunc test_cb, sel_cb;
 
   /* determine type-based settings */
-  if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
-  }
-  else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY*/ |
-              ANIMFILTER_NODUPLIS);
-  }
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
 
   /* filter data */
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
@@ -950,8 +944,7 @@ static void markers_selectkeys_between(bAnimContext *ac)
   ked.f2 = max;
 
   /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY */ |
-            ANIMFILTER_NODUPLIS);
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   /* select keys in-between */
