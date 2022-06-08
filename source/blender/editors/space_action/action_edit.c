@@ -178,10 +178,12 @@ static bool get_keyframe_extents(bAnimContext *ac, float *min, float *max, const
 
         /* Find gp-frame which is less than or equal to current-frame. */
         for (gpf = gpl->frames.first; gpf; gpf = gpf->next) {
-          const float framenum = (float)gpf->framenum;
-          *min = min_ff(*min, framenum);
-          *max = max_ff(*max, framenum);
-          found = true;
+          if (!onlySel || (gpf->flag & GP_FRAME_SELECT)) {
+            const float framenum = (float)gpf->framenum;
+            *min = min_ff(*min, framenum);
+            *max = max_ff(*max, framenum);
+            found = true;
+          }
         }
       }
       else if (ale->datatype == ALE_MASKLAY) {
