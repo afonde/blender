@@ -1580,35 +1580,29 @@ static void actkeys_mselect_column(bAnimContext *ac, short select_mode, float se
   /* loop through all of the keys and select additional keyframes
    * based on the keys found to be selected above
    */
-  if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY */ |
-              ANIMFILTER_NODUPLIS);
-  }
-  else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
-  }
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   for (ale = anim_data.first; ale; ale = ale->next) {
-    AnimData *adt = ANIM_nla_mapping_get(ac, ale);
-
-    /* set frame for validation callback to refer to */
-    if (adt) {
-      ked.f1 = BKE_nla_tweakedit_remap(adt, selx, NLATIME_CONVERT_UNMAP);
-    }
-    else {
-      ked.f1 = selx;
-    }
-
     /* select elements with frame number matching cfra */
     if (ale->type == ANIMTYPE_GPLAYER) {
-      ED_gpencil_select_frame(ale->key_data, selx, select_mode);
+      ED_gpencil_select_frame(ale->data, selx, select_mode);
       ale->update |= ANIM_UPDATE_DEPS;
     }
     else if (ale->type == ANIMTYPE_MASKLAYER) {
-      ED_mask_select_frame(ale->key_data, selx, select_mode);
+      ED_mask_select_frame(ale->data, selx, select_mode);
     }
     else {
+      AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+
+      /* set frame for validation callback to refer to */
+      if (adt) {
+        ked.f1 = BKE_nla_tweakedit_remap(adt, selx, NLATIME_CONVERT_UNMAP);
+      }
+      else {
+        ked.f1 = selx;
+      }
+
       ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
     }
   }
@@ -1724,6 +1718,18 @@ static int mouse_action_keys(bAnimContext *ac,
 
             fcu->flag |= FCURVE_SELECTED;
             ANIM_set_active_channel(ac, ac->data, ac->datatype, filter, fcu, ale->type);
+          }
+          else if (ale->type == ANIMTYPE_GPLAYER) {
+            bGPdata *gpd = (bGPdata *)ale->id;
+            bGPDlayer *gpl = ale->data;
+
+            gpl->flag |= GP_LAYER_SELECT;
+            /* Update other layer status. */
+            if (BKE_gpencil_layer_active_get(gpd) != gpl) {
+              BKE_gpencil_layer_active_set(gpd, gpl);
+              BKE_gpencil_layer_autolock_set(gpd, false);
+              WM_main_add_notifier(NC_GPENCIL | ND_DATA | NA_EDITED, NULL);
+            }
           }
         }
       }
