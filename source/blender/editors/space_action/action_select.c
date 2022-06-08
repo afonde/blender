@@ -1352,25 +1352,12 @@ static void actkeys_select_leftright(bAnimContext *ac, short leftright, short se
   }
 
   /* filter data */
-  if (ELEM(ac->datatype, ANIMCONT_GPENCIL, ANIMCONT_MASK)) {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
-  }
-  else {
-    filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE /*| ANIMFILTER_CURVESONLY*/ |
-              ANIMFILTER_NODUPLIS);
-  }
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   /* select keys */
   for (ale = anim_data.first; ale; ale = ale->next) {
-    AnimData *adt = ANIM_nla_mapping_get(ac, ale);
-
-    if (adt) {
-      ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
-      ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
-      ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
-    }
-    else if (ale->type == ANIMTYPE_GPLAYER) {
+    if (ale->type == ANIMTYPE_GPLAYER) {
       ED_gpencil_layer_frames_select_box(ale->data, ked.f1, ked.f2, select_mode);
       ale->update |= ANIM_UPDATE_DEPS;
     }
@@ -1378,7 +1365,15 @@ static void actkeys_select_leftright(bAnimContext *ac, short leftright, short se
       ED_masklayer_frames_select_box(ale->data, ked.f1, ked.f2, select_mode);
     }
     else {
-      ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+      AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+      if (adt) {
+        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
+        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+      }
+      else {
+        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+      }
     }
   }
 
