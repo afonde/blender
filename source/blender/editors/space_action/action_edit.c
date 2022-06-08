@@ -1623,19 +1623,35 @@ static int actkeys_framejump_exec(bContext *C, wmOperator *UNUSED(op))
 
   /* init edit data */
   /* loop over action data, averaging values */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_FCURVESONLY |
-            ANIMFILTER_NODUPLIS);
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
   ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
   for (ale = anim_data.first; ale; ale = ale->next) {
-    AnimData *adt = ANIM_nla_mapping_get(&ac, ale);
-    if (adt) {
-      ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
-      ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
-      ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+    if (ale->datatype == ALE_GPFRAME) {
+      bGPDlayer *gpl = ale->data;
+      bGPDframe *gpf;
+
+      for (gpf = gpl->frames.first; gpf; gpf = gpf->next) {
+        /* only if selected */
+        if (gpf->flag & GP_FRAME_SELECT) {
+          /* store average time in float 1 (only do rounding at last step) */
+          ked.f1 += gpf->framenum;
+
+          /* increment number of items */
+          ked.i1++;
+        }
+      }
     }
     else {
-      ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
+      AnimData *adt = ANIM_nla_mapping_get(&ac, ale);
+      if (adt) {
+        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
+        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
+        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+      }
+      else {
+        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
+      }
     }
   }
 
