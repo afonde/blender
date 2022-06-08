@@ -949,14 +949,7 @@ static void markers_selectkeys_between(bAnimContext *ac)
 
   /* select keys in-between */
   for (ale = anim_data.first; ale; ale = ale->next) {
-    AnimData *adt = ANIM_nla_mapping_get(ac, ale);
-
-    if (adt) {
-      ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
-      ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
-      ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
-    }
-    else if (ale->type == ANIMTYPE_GPLAYER) {
+    if (ale->type == ANIMTYPE_GPLAYER) {
       ED_gpencil_layer_frames_select_box(ale->data, min, max, SELECT_ADD);
       ale->update |= ANIM_UPDATE_DEPS;
     }
@@ -964,7 +957,15 @@ static void markers_selectkeys_between(bAnimContext *ac)
       ED_masklayer_frames_select_box(ale->data, min, max, SELECT_ADD);
     }
     else {
-      ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+      AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+      if (adt) {
+        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
+        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+      }
+      else {
+        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+      }
     }
   }
 
