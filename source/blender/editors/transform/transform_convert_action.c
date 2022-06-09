@@ -735,7 +735,7 @@ static void posttrans_action_clean(bAnimContext *ac, bAction *act)
   int filter;
 
   /* filter data */
-  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT /*| ANIMFILTER_CURVESONLY*/);
+  filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_FOREDIT | ANIMFILTER_FCURVESONLY);
   ANIM_animdata_filter(ac, &anim_data, filter, act, ANIMCONT_ACTION);
 
   /* loop through relevant data, removing keyframes as appropriate
