@@ -788,34 +788,40 @@ void special_aftertrans_update__actedit(bContext *C, TransInfo *t)
     }
 
     for (ale = anim_data.first; ale; ale = ale->next) {
-      if (ale->datatype == ALE_GPFRAME) {
-        if (ale->id->tag & LIB_TAG_DOIT) {
-          ale->id->tag &= ~LIB_TAG_DOIT;
-          posttrans_gpd_clean((bGPdata *)ale->id);
-        }
-      }
-      else {
-        /* these should all be F-Curves */
-        AnimData *adt = ANIM_nla_mapping_get(&ac, ale);
-        FCurve *fcu = (FCurve *)ale->key_data;
+      switch (ale->datatype) {
+        case ALE_GPFRAME:
+          if (ale->id->tag & LIB_TAG_DOIT) {
+            ale->id->tag &= ~LIB_TAG_DOIT;
+            posttrans_gpd_clean((bGPdata *)ale->id);
+          }
+          break;
 
-        /* 3 cases here for curve cleanups:
-         * 1) NOTRANSKEYCULL on    -> cleanup of duplicates shouldn't be done
-         * 2) canceled == 0        -> user confirmed the transform,
-         *                            so duplicates should be removed
-         * 3) canceled + duplicate -> user canceled the transform,
-         *                            but we made duplicates, so get rid of these
-         */
-        if ((saction->flag & SACTION_NOTRANSKEYCULL) == 0 && ((canceled == 0) || (duplicate))) {
-          if (adt) {
-            ANIM_nla_mapping_apply_fcurve(adt, fcu, 0, 0);
-            posttrans_fcurve_clean(fcu, SELECT, false); /* only use handles in graph editor */
-            ANIM_nla_mapping_apply_fcurve(adt, fcu, 1, 0);
+        case ALE_FCURVE: {
+          AnimData *adt = ANIM_nla_mapping_get(&ac, ale);
+          FCurve *fcu = (FCurve *)ale->key_data;
+
+          /* 3 cases here for curve cleanups:
+           * 1) NOTRANSKEYCULL on    -> cleanup of duplicates shouldn't be done
+           * 2) canceled == 0        -> user confirmed the transform,
+           *                            so duplicates should be removed
+           * 3) canceled + duplicate -> user canceled the transform,
+           *                            but we made duplicates, so get rid of these
+           */
+          if ((saction->flag & SACTION_NOTRANSKEYCULL) == 0 && ((canceled == 0) || (duplicate))) {
+            if (adt) {
+              ANIM_nla_mapping_apply_fcurve(adt, fcu, 0, 0);
+              posttrans_fcurve_clean(fcu, SELECT, false); /* only use handles in graph editor */
+              ANIM_nla_mapping_apply_fcurve(adt, fcu, 1, 0);
+            }
+            else {
+              posttrans_fcurve_clean(fcu, SELECT, false); /* only use handles in graph editor */
+            }
           }
-          else {
-            posttrans_fcurve_clean(fcu, SELECT, false); /* only use handles in graph editor */
-          }
+          break;
         }
+
+        default:
+          BLI_assert_msg(false, "Keys cannot be transformed into this animation type.");
       }
     }
 

@@ -758,55 +758,64 @@ static void insert_action_keys(bAnimContext *ac, short mode)
   const AnimationEvalContext anim_eval_context = BKE_animsys_eval_context_construct(ac->depsgraph,
                                                                                     (float)CFRA);
   for (ale = anim_data.first; ale; ale = ale->next) {
-    if (ale->type == ANIMTYPE_GPLAYER) {
-      bGPdata *gpd = (bGPdata *)ale->id;
-      bGPDlayer *gpl = (bGPDlayer *)ale->data;
-      BKE_gpencil_layer_frame_get(gpl, CFRA, add_frame_mode);
-      /* Check if the gpd changes to tag only once. */
-      if (gpd != gpd_old) {
-        BKE_gpencil_tag(gpd);
-        gpd_old = gpd;
+    switch (ale->type) {
+      case ANIMTYPE_GPLAYER: {
+        bGPdata *gpd = (bGPdata *)ale->id;
+        bGPDlayer *gpl = (bGPDlayer *)ale->data;
+        BKE_gpencil_layer_frame_get(gpl, CFRA, add_frame_mode);
+        /* Check if the gpd changes to tag only once. */
+        if (gpd != gpd_old) {
+          BKE_gpencil_tag(gpd);
+          gpd_old = gpd;
+        }
+        break;
       }
-    }
-    else {
-      FCurve *fcu = (FCurve *)ale->key_data;
 
-      /* Read value from property the F-Curve represents, or from the curve only?
-       * - ale->id != NULL:
-       *   Typically, this means that we have enough info to try resolving the path.
-       *
-       * - ale->owner != NULL:
-       *   If this is set, then the path may not be resolvable from the ID alone,
-       *   so it's easier for now to just read the F-Curve directly.
-       *   (TODO: add the full-blown PointerRNA relative parsing case here...)
-       */
-      if (ale->id && !ale->owner) {
-        insert_keyframe(ac->bmain,
-                        reports,
-                        ale->id,
-                        NULL,
-                        ((fcu->grp) ? (fcu->grp->name) : (NULL)),
-                        fcu->rna_path,
-                        fcu->array_index,
-                        &anim_eval_context,
-                        ts->keyframe_type,
-                        &nla_cache,
-                        flag);
-      }
-      else {
-        AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+      case ANIMTYPE_FCURVE: {
+        FCurve *fcu = (FCurve *)ale->key_data;
 
-        /* adjust current frame for NLA-scaling */
-        float cfra = anim_eval_context.eval_time;
-        if (adt) {
-          cfra = BKE_nla_tweakedit_remap(adt, cfra, NLATIME_CONVERT_UNMAP);
+        /* Read value from property the F-Curve represents, or from the curve only?
+         * - ale->id != NULL:
+         *   Typically, this means that we have enough info to try resolving the path.
+         *
+         * - ale->owner != NULL:
+         *   If this is set, then the path may not be resolvable from the ID alone,
+         *   so it's easier for now to just read the F-Curve directly.
+         *   (TODO: add the full-blown PointerRNA relative parsing case here...)
+         */
+        if (ale->id && !ale->owner) {
+          insert_keyframe(ac->bmain,
+                          reports,
+                          ale->id,
+                          NULL,
+                          ((fcu->grp) ? (fcu->grp->name) : (NULL)),
+                          fcu->rna_path,
+                          fcu->array_index,
+                          &anim_eval_context,
+                          ts->keyframe_type,
+                          &nla_cache,
+                          flag);
+        }
+        else {
+          AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+
+          /* adjust current frame for NLA-scaling */
+          float cfra = anim_eval_context.eval_time;
+          if (adt) {
+            cfra = BKE_nla_tweakedit_remap(adt, cfra, NLATIME_CONVERT_UNMAP);
+          }
+
+          const float curval = evaluate_fcurve(fcu, cfra);
+          insert_vert_fcurve(fcu, cfra, curval, ts->keyframe_type, 0);
         }
 
-        const float curval = evaluate_fcurve(fcu, cfra);
-        insert_vert_fcurve(fcu, cfra, curval, ts->keyframe_type, 0);
+        ale->update |= ANIM_UPDATE_DEFAULT;
+
+        break;
       }
 
-      ale->update |= ANIM_UPDATE_DEFAULT;
+      default:
+        BLI_assert_msg(false, "Keys cannot be inserted into this animation type.");
     }
   }
 
@@ -1517,13 +1526,19 @@ static void setkeytype_action_keys(bAnimContext *ac, short mode)
    * Currently that's not necessary here.
    */
   for (ale = anim_data.first; ale; ale = ale->next) {
-    if (ale->type == ANIMTYPE_GPLAYER) {
-      ED_gpencil_layer_frames_keytype_set(ale->data, mode);
-      ale->update |= ANIM_UPDATE_DEPS;
-    }
-    else {
-      ANIM_fcurve_keyframes_loop(NULL, ale->key_data, NULL, set_cb, NULL);
-      ale->update |= ANIM_UPDATE_DEPS | ANIM_UPDATE_HANDLES;
+    switch (ale->type) {
+      case ANIMTYPE_GPLAYER:
+        ED_gpencil_layer_frames_keytype_set(ale->data, mode);
+        ale->update |= ANIM_UPDATE_DEPS;
+        break;
+
+      case ANIMTYPE_FCURVE:
+        ANIM_fcurve_keyframes_loop(NULL, ale->key_data, NULL, set_cb, NULL);
+        ale->update |= ANIM_UPDATE_DEPS | ANIM_UPDATE_HANDLES;
+        break;
+
+      default:
+        BLI_assert_msg(false, "Keytype cannot be set into this animation type.");
     }
   }
 
@@ -1614,32 +1629,40 @@ static int actkeys_framejump_exec(bContext *C, wmOperator *UNUSED(op))
   ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
   for (ale = anim_data.first; ale; ale = ale->next) {
-    if (ale->datatype == ALE_GPFRAME) {
-      bGPDlayer *gpl = ale->data;
-      bGPDframe *gpf;
+    switch (ale->datatype) {
+      case ALE_GPFRAME: {
+        bGPDlayer *gpl = ale->data;
+        bGPDframe *gpf;
 
-      for (gpf = gpl->frames.first; gpf; gpf = gpf->next) {
-        /* only if selected */
-        if (!(gpf->flag & GP_FRAME_SELECT)) {
-          continue;
+        for (gpf = gpl->frames.first; gpf; gpf = gpf->next) {
+          /* only if selected */
+          if (!(gpf->flag & GP_FRAME_SELECT)) {
+            continue;
+          }
+          /* store average time in float 1 (only do rounding at last step) */
+          ked.f1 += gpf->framenum;
+
+          /* increment number of items */
+          ked.i1++;
         }
-        /* store average time in float 1 (only do rounding at last step) */
-        ked.f1 += gpf->framenum;
+        break;
+      }
 
-        /* increment number of items */
-        ked.i1++;
+      case ALE_FCURVE: {
+        AnimData *adt = ANIM_nla_mapping_get(&ac, ale);
+        if (adt) {
+          ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
+          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
+          ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+        }
+        else {
+          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
+        }
+        break;
       }
-    }
-    else {
-      AnimData *adt = ANIM_nla_mapping_get(&ac, ale);
-      if (adt) {
-        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
-        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
-        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
-      }
-      else {
-        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, NULL, bezt_calc_average, NULL);
-      }
+
+      default:
+        BLI_assert_msg(false, "Cannot jump to keyframe into this animation type.");
     }
   }
 

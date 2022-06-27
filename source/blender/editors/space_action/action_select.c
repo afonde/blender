@@ -949,23 +949,31 @@ static void markers_selectkeys_between(bAnimContext *ac)
 
   /* select keys in-between */
   for (ale = anim_data.first; ale; ale = ale->next) {
-    if (ale->type == ANIMTYPE_GPLAYER) {
-      ED_gpencil_layer_frames_select_box(ale->data, min, max, SELECT_ADD);
-      ale->update |= ANIM_UPDATE_DEPS;
-    }
-    else if (ale->type == ANIMTYPE_MASKLAYER) {
-      ED_masklayer_frames_select_box(ale->data, min, max, SELECT_ADD);
-    }
-    else {
-      AnimData *adt = ANIM_nla_mapping_get(ac, ale);
-      if (adt) {
-        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
-        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
-        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+    switch (ale->type) {
+      case ANIMTYPE_GPLAYER:
+        ED_gpencil_layer_frames_select_box(ale->data, min, max, SELECT_ADD);
+        ale->update |= ANIM_UPDATE_DEPS;
+        break;
+
+      case ANIMTYPE_MASKLAYER:
+        ED_masklayer_frames_select_box(ale->data, min, max, SELECT_ADD);
+        break;
+
+      case ANIMTYPE_FCURVE: {
+        AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+        if (adt) {
+          ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
+          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+          ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+        }
+        else {
+          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+        }
+        break;
       }
-      else {
-        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
-      }
+
+      default:
+        BLI_assert_msg(false, "Keys cannot be selected into this animation type.");
     }
   }
 
@@ -1357,23 +1365,31 @@ static void actkeys_select_leftright(bAnimContext *ac, short leftright, short se
 
   /* select keys */
   for (ale = anim_data.first; ale; ale = ale->next) {
-    if (ale->type == ANIMTYPE_GPLAYER) {
-      ED_gpencil_layer_frames_select_box(ale->data, ked.f1, ked.f2, select_mode);
-      ale->update |= ANIM_UPDATE_DEPS;
-    }
-    else if (ale->type == ANIMTYPE_MASKLAYER) {
-      ED_masklayer_frames_select_box(ale->data, ked.f1, ked.f2, select_mode);
-    }
-    else {
-      AnimData *adt = ANIM_nla_mapping_get(ac, ale);
-      if (adt) {
-        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
-        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
-        ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+    switch (ale->type) {
+      case ANIMTYPE_GPLAYER:
+        ED_gpencil_layer_frames_select_box(ale->data, ked.f1, ked.f2, select_mode);
+        ale->update |= ANIM_UPDATE_DEPS;
+        break;
+
+      case ANIMTYPE_MASKLAYER:
+        ED_masklayer_frames_select_box(ale->data, ked.f1, ked.f2, select_mode);
+        break;
+
+      case ANIMTYPE_FCURVE: {
+        AnimData *adt = ANIM_nla_mapping_get(ac, ale);
+        if (adt) {
+          ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 0, 1);
+          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+          ANIM_nla_mapping_apply_fcurve(adt, ale->key_data, 1, 1);
+        }
+        else {
+          ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
+        }
+        break;
       }
-      else {
-        ANIM_fcurve_keyframes_loop(&ked, ale->key_data, ok_cb, select_cb, NULL);
-      }
+
+      default:
+        BLI_assert_msg(false, "Keys cannot be selected into this animation type.");
     }
   }
 
