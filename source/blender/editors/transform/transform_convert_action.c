@@ -370,7 +370,7 @@ void createTransActionData(bContext *C, TransInfo *t)
   }
 
   /* stop if trying to build list if nothing selected */
-  if ((count == 0) && (gpf_count == 0)) {
+  if (count == 0 && gpf_count == 0) {
     /* cleanup temp list */
     ANIM_animdata_freelist(&anim_data);
     return;

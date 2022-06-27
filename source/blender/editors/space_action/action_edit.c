@@ -568,10 +568,10 @@ static int actkeys_copy_exec(bContext *C, wmOperator *op)
   }
   else {
     /* Both copy function needs to be evaluated to account for mixed selection */
-    short kf_empty = copy_action_keys(&ac);
-    bool gpf_ok = ED_gpencil_anim_copybuf_copy(&ac);
+    const short kf_empty = copy_action_keys(&ac);
+    const bool gpf_ok = ED_gpencil_anim_copybuf_copy(&ac);
 
-    if (kf_empty && (!gpf_ok)) {
+    if (kf_empty && !gpf_ok) {
       BKE_report(op->reports, RPT_ERROR, "No keyframes copied to keyframes copy/paste buffer");
       return OPERATOR_CANCELLED;
     }
@@ -629,7 +629,7 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   }
   else {
     /* Both paste function needs to be evaluated to account for mixed selection */
-    short kf_empty = paste_action_keys(&ac, offset_mode, merge_mode, flipped);
+    const short kf_empty = paste_action_keys(&ac, offset_mode, merge_mode, flipped);
     /* non-zero return means an error occurred while trying to paste */
     gpframes_inbuf = ED_gpencil_anim_copybuf_paste(&ac, offset_mode);
 
@@ -645,7 +645,7 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   }
 
   /* Grease Pencil needs extra update to refresh the added keyframes. */
-  if ((ac.datatype == ANIMCONT_GPENCIL) || (gpframes_inbuf)) {
+  if (ac.datatype == ANIMCONT_GPENCIL || gpframes_inbuf) {
     WM_event_add_notifier(C, NC_GPENCIL | ND_DATA, NULL);
   }
   /* set notifier that keyframes have changed */
@@ -748,7 +748,7 @@ static void insert_action_keys(bAnimContext *ac, short mode)
 
   /* GPLayers specific flags */
   if (ts->gpencil_flags & GP_TOOL_FLAG_RETAIN_LAST) {
-    add_frame_mode = GP_GETFRAME_ADD_COPY; /* XXX: actframe may not be what we want? */
+    add_frame_mode = GP_GETFRAME_ADD_COPY;
   }
   else {
     add_frame_mode = GP_GETFRAME_ADD_NEW;
@@ -1620,13 +1620,14 @@ static int actkeys_framejump_exec(bContext *C, wmOperator *UNUSED(op))
 
       for (gpf = gpl->frames.first; gpf; gpf = gpf->next) {
         /* only if selected */
-        if (gpf->flag & GP_FRAME_SELECT) {
-          /* store average time in float 1 (only do rounding at last step) */
-          ked.f1 += gpf->framenum;
-
-          /* increment number of items */
-          ked.i1++;
+        if (!(gpf->flag & GP_FRAME_SELECT)) {
+          continue;
         }
+        /* store average time in float 1 (only do rounding at last step) */
+        ked.f1 += gpf->framenum;
+
+        /* increment number of items */
+        ked.i1++;
       }
     }
     else {

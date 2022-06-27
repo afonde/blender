@@ -1532,13 +1532,14 @@ static void actkeys_mselect_single(bAnimContext *ac,
     ED_mask_select_frame(ale->data, selx, select_mode);
   }
   else {
-    if ((ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
+    if (ale->type == ANIMTYPE_SUMMARY && ale->datatype == ALE_ALL) {
       ListBase anim_data = {NULL, NULL};
       int filter;
 
       filter = (ANIMFILTER_DATA_VISIBLE | ANIMFILTER_LIST_VISIBLE | ANIMFILTER_NODUPLIS);
       ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
+      /* Loop over all keys that are represented by this summary key. */
       LISTBASE_FOREACH (bAnimListElem *, ale2, &anim_data) {
         if (ale2->type == ANIMTYPE_GPLAYER) {
           ED_gpencil_select_frame(ale2->data, selx, select_mode);
@@ -1631,7 +1632,7 @@ static void actkeys_mselect_channel_only(bAnimContext *ac, bAnimListElem *ale, s
     ED_mask_select_frames(ale->data, select_mode);
   }
   else {
-    if ((ale->type == ANIMTYPE_SUMMARY) && (ale->datatype == ALE_ALL)) {
+    if (ale->type == ANIMTYPE_SUMMARY && ale->datatype == ALE_ALL) {
       ListBase anim_data = {NULL, NULL};
       int filter;
 

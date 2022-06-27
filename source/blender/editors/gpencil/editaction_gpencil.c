@@ -317,7 +317,8 @@ bool ED_gpencil_anim_copybuf_copy(bAnimContext *ac)
   ANIM_animdata_filter(ac, &anim_data, filter, ac->data, ac->datatype);
 
   for (ale = anim_data.first; ale; ale = ale->next) {
-    /* only deal with GPlayers (case of calls from general dopesheet) */
+    /* This function only deals with grease pencil layer frames.
+    This check is needed in the case of a call from the main dopesheet. */
     if (ale->type != ANIMTYPE_GPLAYER) {
       continue;
     }
@@ -364,7 +365,7 @@ bool ED_gpencil_anim_copybuf_copy(bAnimContext *ac)
   ANIM_animdata_freelist(&anim_data);
 
   /* report success */
-  return !ELEM(NULL, gpencil_anim_copybuf.first, gpencil_anim_copybuf.last);
+  return !BLI_listbase_is_empty(&gpencil_anim_copybuf);
 }
 
 bool ED_gpencil_anim_copybuf_paste(bAnimContext *ac, const short offset_mode)
