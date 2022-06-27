@@ -318,7 +318,7 @@ bool ED_gpencil_anim_copybuf_copy(bAnimContext *ac)
 
   for (ale = anim_data.first; ale; ale = ale->next) {
     /* This function only deals with grease pencil layer frames.
-    This check is needed in the case of a call from the main dopesheet. */
+     * This check is needed in the case of a call from the main dopesheet. */
     if (ale->type != ANIMTYPE_GPLAYER) {
       continue;
     }
