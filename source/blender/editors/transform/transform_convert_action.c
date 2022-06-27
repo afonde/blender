@@ -781,9 +781,9 @@ void special_aftertrans_update__actedit(bContext *C, TransInfo *t)
     /* get channels to work on */
     ANIM_animdata_filter(&ac, &anim_data, filter, ac.data, ac.datatype);
 
-    LISTBASE_FOREACH (bAnimListElem *, ale, &anim_data) {
-      if (ale->datatype == ALE_GPFRAME) {
-        ale->id->tag |= LIB_TAG_DOIT;
+    LISTBASE_FOREACH (bAnimListElem *, ale2, &anim_data) {
+      if (ale2->datatype == ALE_GPFRAME) {
+        ale2->id->tag |= LIB_TAG_DOIT;
       }
     }
 
