@@ -1740,13 +1740,7 @@ static int mouse_action_keys(bAnimContext *ac,
             bGPdata *gpd = (bGPdata *)ale->id;
             bGPDlayer *gpl = ale->data;
 
-            gpl->flag |= GP_LAYER_SELECT;
-            /* Update other layer status. */
-            if (BKE_gpencil_layer_active_get(gpd) != gpl) {
-              BKE_gpencil_layer_active_set(gpd, gpl);
-              BKE_gpencil_layer_autolock_set(gpd, false);
-              WM_main_add_notifier(NC_GPENCIL | ND_DATA | NA_EDITED, NULL);
-            }
+            ED_gpencil_set_active_channel(gpd, gpl);
           }
         }
       }
@@ -1759,13 +1753,7 @@ static int mouse_action_keys(bAnimContext *ac,
           bGPdata *gpd = (bGPdata *)ale->id;
           bGPDlayer *gpl = ale->data;
 
-          gpl->flag |= GP_LAYER_SELECT;
-          /* Update other layer status. */
-          if (BKE_gpencil_layer_active_get(gpd) != gpl) {
-            BKE_gpencil_layer_active_set(gpd, gpl);
-            BKE_gpencil_layer_autolock_set(gpd, false);
-            WM_main_add_notifier(NC_GPENCIL | ND_DATA | NA_EDITED, NULL);
-          }
+          ED_gpencil_set_active_channel(gpd, gpl);
         }
       }
       else if (ac->datatype == ANIMCONT_MASK) {

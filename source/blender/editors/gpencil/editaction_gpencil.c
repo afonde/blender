@@ -214,6 +214,18 @@ void ED_gpencil_layer_frames_select_region(KeyframeEditData *ked,
   }
 }
 
+void ED_gpencil_set_active_channel(bGPdata *gpd, bGPDlayer *gpl)
+{
+  gpl->flag |= GP_LAYER_SELECT;
+
+  /* Update other layer status. */
+  if (BKE_gpencil_layer_active_get(gpd) != gpl) {
+    BKE_gpencil_layer_active_set(gpd, gpl);
+    BKE_gpencil_layer_autolock_set(gpd, false);
+    WM_main_add_notifier(NC_GPENCIL | ND_DATA | NA_EDITED, NULL);
+  }
+}
+
 /* ***************************************** */
 /* Frame Editing Tools */
 
