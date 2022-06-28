@@ -1235,11 +1235,11 @@ short paste_animedit_keys(bAnimContext *ac,
 
   /* check if buffer is empty */
   if (BLI_listbase_is_empty(&animcopybuf)) {
-    return -1;
+    return KEYFRAME_PASTE_NOTHING_TO_PASTE;
   }
 
   if (BLI_listbase_is_empty(anim_data)) {
-    return -2;
+    return KEYFRAME_PASTE_NOWHERE_TO_PASTE;
   }
 
   /* methods of offset */
@@ -1333,7 +1333,7 @@ short paste_animedit_keys(bAnimContext *ac,
 
   ANIM_animdata_update(ac, anim_data);
 
-  return 0;
+  return KEYFRAME_PASTE_OK;
 }
 
 /* **************************************************** */

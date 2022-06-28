@@ -556,7 +556,14 @@ static int graphkeys_paste_exec(bContext *C, wmOperator *op)
   ac.reports = op->reports;
 
   /* Paste keyframes - non-zero return means an error occurred while trying to paste. */
-  if (paste_graph_keys(&ac, offset_mode, merge_mode, flipped)) {
+  const eKeyPasteError kf_empty = paste_graph_keys(&ac, offset_mode, merge_mode, flipped);
+  if (kf_empty != KEYFRAME_PASTE_OK) {
+    if (kf_empty == KEYFRAME_PASTE_NOWHERE_TO_PASTE) {
+      BKE_report(op->reports, RPT_ERROR, "No selected F-Curves to paste into");
+    }
+    else if (kf_empty == KEYFRAME_PASTE_NOTHING_TO_PASTE) {
+      BKE_report(op->reports, RPT_ERROR, "No data in buffer to paste");
+    }
     return OPERATOR_CANCELLED;
   }
 

@@ -629,15 +629,15 @@ static int actkeys_paste_exec(bContext *C, wmOperator *op)
   }
   else {
     /* Both paste function needs to be evaluated to account for mixed selection */
-    const short kf_empty = paste_action_keys(&ac, offset_mode, merge_mode, flipped);
+    const eKeyPasteError kf_empty = paste_action_keys(&ac, offset_mode, merge_mode, flipped);
     /* non-zero return means an error occurred while trying to paste */
     gpframes_inbuf = ED_gpencil_anim_copybuf_paste(&ac, offset_mode);
 
     if (kf_empty && !gpframes_inbuf) {
-      if (kf_empty == -2) {
+      if (kf_empty == KEYFRAME_PASTE_NOWHERE_TO_PASTE) {
         BKE_report(op->reports, RPT_ERROR, "No selected F-Curves to paste into");
       }
-      else {
+      else if (kf_empty == KEYFRAME_PASTE_NOTHING_TO_PASTE) {
         BKE_report(op->reports, RPT_ERROR, "No data in buffer to paste");
       }
       return OPERATOR_CANCELLED;
